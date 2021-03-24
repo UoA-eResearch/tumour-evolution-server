@@ -26,7 +26,6 @@ print(sessions)
 
 
 def save():
-    logging.info("Saving")
     safe_sess = {sid: {"data": sess["data"]}  # entries
                  for sid, sess in sessions.items()}
     with open("db.json", "w") as f:
