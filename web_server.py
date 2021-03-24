@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 # Modified from https://github.com/UoA-eResearch/dynamic_network_graph/blob/main/web_server.py
+# See: https://uoa-eresearch.github.io/dynamic_network_graph/url_sync.html#URL_SYNC_TEST
 
 import asyncio
 import json
@@ -11,8 +12,8 @@ import signal
 import sys
 
 logging.basicConfig(level=logging.INFO)
-logging.getLogger("asyncio").setLevel(logging.CRITICAL)
-logging.getLogger("websockets").setLevel(logging.CRITICAL)
+logging.getLogger("asyncio").setLevel(logging.INFO)
+logging.getLogger("websockets").setLevel(logging.INFO)
 
 sessions = {}
 try:
@@ -26,7 +27,7 @@ print(sessions)
 
 def save():
     logging.info("Saving")
-    safe_sess = {sid: {"entries": sess["entries"]}
+    safe_sess = {sid: {"data": sess["data"]}  # entries
                  for sid, sess in sessions.items()}
     with open("db.json", "w") as f:
         json.dump(safe_sess, f)
@@ -42,7 +43,7 @@ signal.signal(signal.SIGTERM, receiveSignal)
 
 async def save_loop():
     while True:
-        await asyncio.sleep(300)
+        await asyncio.sleep(30)
         save()
 
 
@@ -56,41 +57,58 @@ async def app(websocket, path):
             sess = sessions.get(session_id)
             if session_id and not sess:
                 sess = {
-                    "entries": {},
+                    "data": "",
                     "users": set([websocket]),
                 }
                 sessions[session_id] = sess
             if sess and not sess.get("users"):
                 sess["users"] = set([websocket])
-            if action == "create_session":
-                session_id = str(random.randint(0, 9999))
-                sessions[session_id] = {
-                    "entries": {},
-                    "users": set([websocket]),
-                }
-                await websocket.send(json.dumps({"session_id": session_id}))
-            elif action == "connect":
+            # if action == "create_session":
+            #     session_id = str(random.randint(0, 9999))
+            #     sessions[session_id] = {
+            #         "data": "",
+            #         "users": set([websocket]),
+            #     }
+            #     await websocket.send(json.dumps({"session_id": session_id}))
+            if action == "connect":
                 sess["users"].add(websocket)
                 # Inform all connected users about the newly connected user
                 message = json.dumps({"user_count": len(sess["users"])})
                 await asyncio.wait([user.send(message) for user in sess["users"]])
-            elif action == "request_entries":
+            elif action == "request_data":
                 await websocket.send(json.dumps({
-                    "entries": sess["entries"]
+                    "data": sess["data"]
                 }))
-            elif action == "upsert_entry":
-                entry = data.get("entry")
-                entry_id = entry.get("id")
-                sess["entries"][entry_id] = entry
-                # Inform all connected users about the new entry
-                message = json.dumps({"entries": [entry]})
+            elif action == "send_data":
+                sent_data = data.get("data")
+                sess["data"] = data
+                logging.info(
+                    f"action:{action} session_id:{session_id}, data: {sent_data}")
+
+                # Inform all connected users about the sent data
+                message = json.dumps({"data": data})
+                usercount = len(sess["users"])
+                print(sess)
+                logging.info(f"forwarding data to {usercount} users")
                 await asyncio.wait([user.send(message) for user in sess["users"]])
-            elif action == "delete_entry":
-                entry_id = data.get("entry_id")
-                if sess["entries"].pop(entry_id, None):
-                    # Inform all connected users about the deleted entry
-                    message = json.dumps({"deleted_entry": entry_id})
-                    await asyncio.wait([user.send(message) for user in sess["users"]])
+            elif action == "highlight":
+                sample_sites = data.get("sample_sites")
+                sess["data"] = data
+                logging.info(
+                    f"action:{action} session_id:{session_id}, data: {sample_sites}")
+
+                # Inform all connected users about the sent data
+                message = json.dumps({"data": data})
+                usercount = len(sess["users"])
+                print(sess)
+                logging.info(f"forwarding data to {usercount} users")
+                await asyncio.wait([user.send(message) for user in sess["users"]])
+            # elif action == "delete_entry":
+            #     entry_id = data.get("entry_id")
+            #     if sess["entries"].pop(entry_id, None):
+            #         # Inform all connected users about the deleted entry
+            #         message = json.dumps({"deleted_entry": entry_id})
+            #         await asyncio.wait([user.send(message) for user in sess["users"]])
             else:
                 logging.error(f"unsupported event: {data}")
     except websockets.exceptions.ConnectionClosedError as e:
@@ -106,6 +124,7 @@ async def app(websocket, path):
                     await asyncio.wait([user.send(message) for user in sess["users"]])
 
 start_server = websockets.serve(app, "0.0.0.0", 6789)
+
 
 def exception_handler(loop, context):
     logging.debug(context["message"])
