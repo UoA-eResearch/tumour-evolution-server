@@ -72,11 +72,13 @@ async def app(websocket, path):
             if action == "connect":
                 sess["users"].add(websocket)
                 # Inform all connected users about the newly connected user
-                message = json.dumps({"user_count": len(sess["users"])})
+                message = json.dumps(
+                    {"action": "user_connected", "user_count": len(sess["users"])})
                 await asyncio.wait([user.send(message) for user in sess["users"]])
             elif action == "request_data":
                 await websocket.send(json.dumps({
-                    "data": sess["data"]
+                    "data": sess["data"],
+                    "action": "data_returned_from_server"
                 }))
             elif action == "send_data":
                 sent_data = data.get("data")
@@ -85,9 +87,9 @@ async def app(websocket, path):
                     f"action:{action} session_id:{session_id}, data: {sent_data}")
 
                 # Inform all connected users about the sent data
-                message = json.dumps({"data": data})
+                message = json.dumps(data)
                 usercount = len(sess["users"])
-                print(sess)
+                print(f"Users: {usercount} " + str(sess))
                 logging.info(f"forwarding data to {usercount} users")
                 await asyncio.wait([user.send(message) for user in sess["users"]])
             elif action == "highlight":
@@ -97,9 +99,9 @@ async def app(websocket, path):
                     f"action:{action} session_id:{session_id}, data: {sample_sites}")
 
                 # Inform all connected users about the sent data
-                message = json.dumps({"data": data})
+                message = json.dumps(data)
                 usercount = len(sess["users"])
-                print(sess)
+                print(f"Users: {usercount} " + str(sess))
                 logging.info(f"forwarding data to {usercount} users")
                 await asyncio.wait([user.send(message) for user in sess["users"]])
             # elif action == "delete_entry":
@@ -119,7 +121,8 @@ async def app(websocket, path):
                 sess["users"].remove(websocket)
                 if len(sess["users"]) > 0:
                     # Inform all connected users about the disconnected user
-                    message = json.dumps({"user_count": len(sess["users"])})
+                    message = json.dumps(
+                        {"action": "user_disconnected", "user_count": len(sess["users"])})
                     await asyncio.wait([user.send(message) for user in sess["users"]])
 
 start_server = websockets.serve(app, "0.0.0.0", 6789)
