@@ -134,3 +134,4 @@ dmypy.json
 # temp db, logs
 db.json
 log.txt
+nohup.out
