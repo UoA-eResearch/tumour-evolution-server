@@ -34,14 +34,15 @@
     <div class="form-group row">
         <label for="URL" class="col-sm-2 col-form-label" style="margin-left: 15px">URL</label>
         <div class="col-sm-5">
-            <input id="URL" type="text" class="form-control" value="https://imdmap.auckland.ac.nz">
+            <input id="URL" type="text" class="form-control" value="">
         </div>
     </div>
-    <iframe src="https://imdmap.auckland.ac.nz"></iframe>
+    <!-- <iframe src="https://imdmap.auckland.ac.nz"></iframe> -->
 
     <script type="text/javascript">
-        var ws = new WebSocket("ws://localhost:6789/");
-        //var ws = new WebSocket("<wss_endpoint>");
+        //var ws = new WebSocket("ws://localhost:6789/");
+        var ws = new WebSocket("wss://server.tumour-evolution.cloud.edu.au");
+        //var ws = new WebSocket("wss://api-proxy.auckland-cer.cloud.edu.au/dynamic_network_graph");
         ws.onmessage = function (event) {
             data = JSON.parse(event.data);
             console.log(data);
@@ -55,7 +56,7 @@
                     if (entry.id == "URL") {
                         var URL = entry.URL;
                         $("#URL").val(URL);
-                        $("iframe").attr("src", URL)
+                        // $("iframe").attr("src", URL)
                     }
                 }
             } else if (data.error) {
