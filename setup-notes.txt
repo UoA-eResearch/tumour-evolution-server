@@ -178,3 +178,7 @@ sudo systemctl restart apache2
 # you might need to change the file permissions:
 chmod +x ./web_server.py
 
+# Renew the SSL certificate
+https://community.letsencrypt.org/t/renew-letsencrypt-certificate/34677
+Run the following command once the certificate is due for renewal:
+sudo certbot renew
