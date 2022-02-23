@@ -1,6 +1,6 @@
 Nectar:
 apply for allocation - enter project details, funding etc etc
-Approval is by Sean - can take a few days, but only took about 5 min
+Approval can take a few days, but only took about 5 min
 Switch into allocation (project) - name is tumour-evolution
 
 Launch instance:
@@ -37,7 +37,7 @@ add the ICMP rule from the dropdown
 Now add the new security group to the instance:
 Go to instance, edit security groups, add the http and https group
 
-We should now be able to SSH into our instance at server.tumour-evolution.cloud.edu.au...
+We should now be able to SSH into our instance at server.tumour-evolution.cloud.edu.au
 
 Using Mobaxterm, create a new SSH session:
 remote host = server.tumour-evolution.cloud.edu.au
@@ -179,6 +179,8 @@ sudo systemctl restart apache2
 chmod +x ./web_server.py
 
 # Renew the SSL certificate
-https://community.letsencrypt.org/t/renew-letsencrypt-certificate/34677
-Run the following command once the certificate is due for renewal:
+certbot should be set up to auto renew - see https://eff-certbot.readthedocs.io/en/stable/using.html#automated-renewals)
+
+However, if it needs to be manually renewed, run the following command once the certificate is due for renewal:
 sudo certbot renew
+
