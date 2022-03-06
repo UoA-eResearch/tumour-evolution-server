@@ -1,56 +1,54 @@
 # tumour-evolution-server
 
 ## Running locally
-Run the webserver:
-
-`python web_server.py`
+Run the webserver: `python web_server.py`
 
 ## Getting a Nectar VM:
-In Nectar, apply for allocation - enter project details
-Approval can take anywhere from a few minutes to a few days
-Switch into allocation (project) - the project name is tumour-evolution
+- In Nectar, apply for allocation and enter the project details.
+- Approval can take anywhere from a few minutes to a few days.
+- Navigate into allocation (project) in the Nectar portal. The project name is tumour-evolution.
 
 ## Launch instance:
-tumour-evolution
-ubuntu 20.04
-m3.medium (4 CPU, 8GB RAM)
-add or create an ssh key
+- Name: tumour-evolution
+- OS: ubuntu 20.04
+- Flavor: m3.medium (4 CPU, 8GB RAM)
+- Add or create an ssh key by going to Compute > Key Pairs > Create Key pair, use this as the key when the instance is created.*
+- Once launched, take note of the IP address (130.216.216.141)
 
-Once launched, take note of the IP address (130.216.216.141)
-
+*SSH key is in SecretServer: https://secretserver.auckland.ac.nz/secretserver/SecretView.aspx?secretid=33196
 ## Create DNS record:
-Go to DNS -> zones
-click Create Record Set on the auckland-cer.cloud.edu.au. zone
-Type is A
-name the record set: server.tumour-evolution.cloud.edu.au. (note the dot at the end)
-leave default ttl
-in the record, add the IP address of the newly launched instance
-Submit
+- Go to DNS -> zones
+- click Create Record Set on the auckland-cer.cloud.edu.au. zone
+- Type is A
+- name the record set: server.tumour-evolution.cloud.edu.au. (note the dot at the end)
+- leave default ttl
+- in the record, add the IP address of the newly launched instance
+- Submit
 -> you can now see your record under Record Sets if you go into the zone
 
 ## Create a security group for http and https:
-the instance already has the default sec group.
-Create a new security group: Network -> Security Groups
-Create security group..
-Call it 'http and https'
-Add rules using the existing dropdowns, add on http and https
-Save
+- the instance already has the default sec group.
+- Create a new security group: Network -> Security Groups
+- Create security group..
+- Call it 'http and https'
+- Add rules using the existing dropdowns, add on http and https
+- Save
 
 ## Edit the default security group:
-remove the two rules for ingress from anywhere
-add the SSH rule from the dropdown
-add the ICMP rule from the dropdown
+- remove the two rules for ingress from anywhere
+- add the SSH rule from the dropdown
+- add the ICMP rule from the dropdown
 
 Now add the new security group to the instance:
-Go to instance, edit security groups, add the http and https group
+- Go to instance, edit security groups, add the http and https group
 
 We should now be able to SSH into our instance at *server.tumour-evolution.cloud.edu.au*
 
 ## SSH into instance
 Using Mobaxterm, create a new SSH session:
-remote host = server.tumour-evolution.cloud.edu.au
-username = ubuntu
-port = 22
+- remote host = server.tumour-evolution.cloud.edu.au
+- username = ubuntu
+- port = 22
 under advanced settings, enter the path to the SSH key:
 e.g. C:\Users\rmcc872\.ssh\tumourevokey.txt
 
@@ -80,22 +78,17 @@ nohup
 nohup --help
 ```
 
-Make the webserver file executable:
-`chmod +x ./web_server.py`
+Make the webserver file executable: `chmod +x ./web_server.py`
 
-Run the webserver:
-`./web_server.py`
-...use ctrl-c to quit once you're done
+Run the webserver: `./web_server.py`
+- use ctrl-c to quit once you're done
 
-List files:
-`ls -lah`
-should now be a db.json file
+List files: `ls -lah`
+- should now be a db.json file
 
-Now run the webserver as a background process:
-`nohup ./web_server.py &`
+Now run the webserver as a background process: `nohup ./web_server.py &`
 
-View running python tasks:
-`ps aux | grep python`
+View running python tasks: `ps aux | grep python`
 
 ```
 root         538  0.0  0.2  31656 18164 ?        Ss   22:20   0:00 /usr/bin/python3 /usr/bin/networkd-dispatcher --run-startup-triggers
@@ -142,23 +135,16 @@ sudo certbot --apache
 You can check the SSL is working properly (here)[https://www.ssllabs.com/ssltest/analyze.html?d=server.tumour-evolution.cloud.edu.au]
 
 ## Configure the apache proxy:
-Create a file proxy.conf and open with nano:
-`sudo nano /etc/apache2/sites-available/proxy.conf`
+Create a file proxy.conf and open with nano: `sudo nano /etc/apache2/sites-available/proxy.conf`
 
-Add the following lines:
+- Add the following lines:
 ```
 ProxyPass / ws://localhost:6789
 Header set Access-Control-Allow-Origin "*"
 ```
-
-save the file
-
-Enable headers module:
-`sudo a2enmod headers`
-
-Enable the site:
-`sudo a2ensite`
-(choose proxy)
+- save the file
+- Enable headers module: `sudo a2enmod headers`
+- Enable the site: `sudo a2ensite` (choose proxy)
 
 ## Restart:
 `sudo systemctl restart apache2`
@@ -189,7 +175,7 @@ We use wss protocol, so our sockets endpoint is:
 
 
 
-## Stop and restart the webserver process:
+## Stop and restart the webserver process
 
 ### Find the process id of ./web_server.py:
 `ps aux | grep python`
@@ -204,7 +190,7 @@ We use wss protocol, so our sockets endpoint is:
 `sudo systemctl restart apache2`
 
 ## Permission Errors 
-If you get any permission errors (could especially happen after any updates to the web_server file), 
+If you get any permission errors (could especially happen after any updates to the web_server file, e.g. after a git pull), 
 you might need to change the file permissions:
 `chmod +x ./web_server.py`
 
